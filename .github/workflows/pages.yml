@@ -1,0 +1,44 @@
+# Publica o jogo no GitHub Pages a cada push na main.
+# Gera um pacote unico (dist/jogo.js) e grava o hash do commit na URL do
+# script, para o navegador do celular nunca ficar com a versao antiga em cache.
+name: Publicar no GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Empacotar o jogo
+        run: |
+          npx --yes esbuild@0.28.2 src/main.js --bundle --format=esm --minify --outfile=dist/jogo.js
+          sed -i "s/__VERSAO__/${GITHUB_SHA::10}/g" index.html
+          mkdir -p site && cp -r index.html dist assets README.md COMO-RODAR.md roteiro-um-dia-do-pedro.md site/
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

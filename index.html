@@ -59,7 +59,14 @@
     // frame de texto sai com a fonte de fallback e "pula" depois.
     async function iniciar() {
       try { await document.fonts.load("10px 'Press Start 2P'"); await document.fonts.ready; } catch (e) {}
-      await import('./src/main.js');
+      // No site publicado existe o pacote dist/jogo.js com a versao no nome
+      // (nunca fica velho no cache); rodando local, usa os modulos direto.
+      const local = /^(localhost|127\.|192\.168\.|10\.)/.test(location.hostname);
+      if (local) { await import('./src/main.js'); }
+      else {
+        try { await import('./dist/jogo.js?v=__VERSAO__'); }
+        catch (e) { await import('./src/main.js'); }
+      }
       const aviso = document.getElementById('carregando');
       if (aviso) aviso.remove();
     }
