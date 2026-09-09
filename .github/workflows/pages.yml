@@ -29,7 +29,7 @@ jobs:
         run: |
           npx --yes esbuild@0.28.2 src/main.js --bundle --format=esm --minify --outfile=dist/jogo.js
           sed -i "s/__VERSAO__/${GITHUB_SHA::10}/g" index.html
-          mkdir -p site && cp -r index.html dist assets README.md COMO-RODAR.md roteiro-um-dia-do-pedro.md site/
+          mkdir -p site && cp -r index.html dist README.md COMO-RODAR.md roteiro-um-dia-do-pedro.md site/
       - uses: actions/upload-pages-artifact@v3
         with:
           path: site
