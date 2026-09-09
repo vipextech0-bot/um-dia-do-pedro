@@ -111,15 +111,24 @@ jogo.scale.updateCenter = function () {
   style.marginTop = Math.floor((this.parentSize.height - this.displaySize.height) / 2) + 'px';
 };
 
-// Toque: na tela girada, o eixo x do jogo desce a tela e o eixo y vai da
-// direita para a esquerda.
-const transformarOriginal = jogo.input.transformPointer.bind(jogo.input);
+// Toque: em vez das medidas que o Phaser guarda (que ficam defasadas quando
+// a barra do navegador muda, na tela cheia ou ao girar), mede o canvas na
+// tela NO INSTANTE do toque e converte direto para a coordenada do jogo.
+// Na tela girada, o eixo x do jogo desce a tela e o eixo y vai da direita
+// para a esquerda.
 jogo.input.transformPointer = function (pointer, pageX, pageY, wasMove) {
-  if (!document.documentElement.classList.contains('retrato')) return transformarOriginal(pointer, pageX, pageY, wasMove);
-  const b = this.scaleManager.canvasBounds;
-  const s = this.scaleManager.displayScale.x;
-  const x = (pageY - b.top) * s;
-  const y = (b.left + b.width - pageX) * s;
+  const r = this.canvas.getBoundingClientRect();
+  const cx = pageX - (window.pageXOffset || 0);
+  const cy = pageY - (window.pageYOffset || 0);
+  const base = this.scaleManager.baseSize;
+  let x, y;
+  if (document.documentElement.classList.contains('retrato')) {
+    x = (cy - r.top) * (base.width / r.height);
+    y = (r.left + r.width - cx) * (base.height / r.width);
+  } else {
+    x = (cx - r.left) * (base.width / r.width);
+    y = (cy - r.top) * (base.height / r.height);
+  }
   const p0 = pointer.position, p1 = pointer.prevPosition;
   p1.x = p0.x; p1.y = p0.y;
   const a = pointer.smoothFactor;
