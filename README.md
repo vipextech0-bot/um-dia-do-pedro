@@ -1,5 +1,7 @@
 # Um Dia do Pedro
 
+**Jogue agora:** https://vipextech0-bot.github.io/um-dia-do-pedro/
+
 Jogo em pixel art (Phaser 3, HTML5) que conta um dia comum de quem esta
 construindo o futuro: acordar atrasado, banho, onibus, escritorio, dez
 processos, faculdade, a ligacao — e o que vem dez anos depois.
