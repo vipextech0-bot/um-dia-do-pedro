@@ -126,6 +126,31 @@ jogo.input.transformPointer = function (pointer, pageX, pageY, wasMove) {
   if (!wasMove || a === 0) { p0.x = x; p0.y = y; } else { p0.x = x * a + p1.x * (1 - a); p0.y = y * a + p1.y * (1 - a); }
 };
 
+// Diagnostico na tela (abra com ?debug): mostra toque, tamanhos e audio.
+if (location.search.includes('debug')) {
+  const painel = document.createElement('pre');
+  painel.style.cssText = 'position:fixed;left:0;top:0;z-index:99;background:rgba(0,0,0,.75);color:#0f0;font:11px monospace;padding:6px;margin:0;pointer-events:none;max-width:60vw;white-space:pre-wrap;';
+  document.body.appendChild(painel);
+  let ultimo = '-';
+  const atualizar = () => {
+    const c = jogo.canvas.getBoundingClientRect();
+    const pt = jogo.input.activePointer;
+    painel.textContent = [
+      'ua: ' + navigator.userAgent.slice(0, 60),
+      'inner: ' + innerWidth + 'x' + innerHeight + ' dpr ' + devicePixelRatio,
+      'retrato: ' + document.documentElement.classList.contains('retrato') + ' toque: ' + TEM_TOQUE,
+      'jogo: ' + jogo.scale.width + 'x' + jogo.scale.height + ' pai: ' + jogo.scale.parentSize.width + 'x' + jogo.scale.parentSize.height,
+      'canvas: ' + [c.left, c.top, c.width, c.height].map(Math.round).join(','),
+      'ultimo toque: ' + ultimo + ' -> jogo ' + Math.round(pt.x) + ',' + Math.round(pt.y),
+      'cena: ' + jogo.scene.scenes.filter((s) => s.scene.isActive()).map((s) => s.scene.key).join(','),
+    ].join('\n');
+  };
+  window.addEventListener('touchstart', (e) => { const t = e.touches[0]; ultimo = Math.round(t.pageX) + ',' + Math.round(t.pageY); }, { passive: true });
+  window.addEventListener('pointerdown', (e) => { ultimo = Math.round(e.pageX) + ',' + Math.round(e.pageY); }, { passive: true });
+  setInterval(atualizar, 250);
+  import('./audio/som.js').then((m) => setInterval(() => { painel.textContent += '\naudio: ' + (m.som.ctx ? m.som.ctx.state : 'sem contexto') + ' mudo=' + m.som.mudo + ' trilha=' + m.som.trilha; }, 260));
+}
+
 // Rotacao e barra de endereco mudam o tamanho aos poucos: reaplica algumas vezes.
 const reaplicar = () => { aplicarOrientacao(); [150, 500, 1200].forEach((ms) => setTimeout(aplicarOrientacao, ms)); };
 window.addEventListener('load', reaplicar);
