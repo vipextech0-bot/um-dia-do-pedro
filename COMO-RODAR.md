@@ -91,8 +91,11 @@ Funciona no toque: metades da tela para andar/trocar de faixa (fases 2 e
 próprio na tela** na Fase 6 (só as letras das palavras), **II** na barra de
 cima pausa, vibração ao levar dano (Android), botão de tela cheia no menu.
 Em celulares largos (19,5:9) a largura lógica cresce de 480 para até 540 px
-para não sobrar tarja preta; o *notch* é respeitado (safe-area). Em pé, a
-tela pede para virar o aparelho.
+para não sobrar tarja preta; o *notch* é respeitado (safe-area). **Com o
+celular em pé, o jogo gira 90° sozinho e ocupa a tela inteira** — não
+precisa destravar a rotação; é só segurar o aparelho de lado. Isso é feito
+em [src/main.js](src/main.js): o contêiner é girado por CSS e o Phaser
+recebe o tamanho do pai "desgirado" e o toque remapeado.
 
 ## Progresso e "seu dia"
 

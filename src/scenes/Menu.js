@@ -70,10 +70,20 @@ export class Menu extends Phaser.Scene {
       fontFamily: FONTE, fontSize: '8px', color: COR.creme,
     }).setOrigin(0.5).setAlpha(0.9).setShadow(0, 1, '#000000', 0);
 
-    if (TEM_TOQUE && document.fullscreenEnabled) {
+    if (TEM_TOQUE && document.fullscreenEnabled && screen.orientation && screen.orientation.lock) {
       const tc = this.add.text(6, 6, '⛶ tela cheia', { fontFamily: FONTE, fontSize: '8px', color: COR.creme })
         .setOrigin(0, 0).setAlpha(0.7).setInteractive({ useHandCursor: true });
-      tc.on('pointerdown', () => { if (!this.scale.isFullscreen) this.scale.startFullscreen(); });
+      tc.on('pointerdown', async () => {
+        if (this.scale.isFullscreen) return;
+        try {
+          this.scale.fullscreenTarget = document.getElementById('jogo');
+          this.scale.startFullscreen();
+          await screen.orientation.lock('landscape');
+        } catch (e) {
+          // sem trava de orientacao, melhor ficar fora da tela cheia (o giro por CSS cuida do retrato)
+          if (this.scale.isFullscreen) this.scale.stopFullscreen();
+        }
+      });
     }
 
     this.input.keyboard.once('keydown-ENTER', () => this.comecar());

@@ -69,10 +69,70 @@ const config = {
 
 export const jogo = new Phaser.Game(config);
 
-// Recalcula o tamanho e a posicao do canvas depois que a pagina assenta;
-// sem isso o mapeamento do mouse pode ficar com o offset da primeira medicao.
-window.addEventListener('load', () => jogo.scale.refresh());
-window.addEventListener('resize', () => jogo.scale.refresh());
+// ---- Celular em pe: o jogo gira 90 graus e ocupa a tela toda ----------------
+// O #jogo recebe largura = altura da tela e altura = largura da tela, e e
+// girado por CSS. O Phaser continua achando que o pai esta em paisagem
+// (getParentBounds trocado) e o toque e remapeado para a rotacao.
+const TEM_TOQUE = ('ontouchstart' in window) || (navigator.maxTouchPoints || 0) > 0;
+const ehRetrato = () => TEM_TOQUE && window.innerHeight > window.innerWidth && !document.fullscreenElement;
+
+function aplicarOrientacao() {
+  const el = document.getElementById('jogo');
+  const retrato = ehRetrato();
+  document.documentElement.classList.toggle('retrato', retrato);
+  if (retrato) {
+    el.style.width = window.innerHeight + 'px';
+    el.style.height = window.innerWidth + 'px';
+    el.style.left = window.innerWidth + 'px';
+    el.style.top = '0px';
+  } else {
+    el.style.width = ''; el.style.height = ''; el.style.left = ''; el.style.top = '';
+  }
+  jogo.scale.refresh();
+}
+
+// O pai girado tem largura e altura trocadas na tela; desfaz a troca para o FIT.
+jogo.scale.getParentBounds = function () {
+  if (!this.parent) return false;
+  const r = this.parent.getBoundingClientRect();
+  let w = r.width, h = r.height;
+  if (document.documentElement.classList.contains('retrato')) { const t = w; w = h; h = t; }
+  if (this.parentSize.width !== w || this.parentSize.height !== h) { this.parentSize.setSize(w, h); return true; }
+  return false;
+};
+
+// A centralizacao do Phaser mede o canvas ja girado; no retrato, centraliza
+// pelo tamanho logico (antes da rotacao).
+const centralizarOriginal = jogo.scale.updateCenter.bind(jogo.scale);
+jogo.scale.updateCenter = function () {
+  if (!document.documentElement.classList.contains('retrato')) return centralizarOriginal();
+  const style = this.canvas.style;
+  style.marginLeft = Math.floor((this.parentSize.width - this.displaySize.width) / 2) + 'px';
+  style.marginTop = Math.floor((this.parentSize.height - this.displaySize.height) / 2) + 'px';
+};
+
+// Toque: na tela girada, o eixo x do jogo desce a tela e o eixo y vai da
+// direita para a esquerda.
+const transformarOriginal = jogo.input.transformPointer.bind(jogo.input);
+jogo.input.transformPointer = function (pointer, pageX, pageY, wasMove) {
+  if (!document.documentElement.classList.contains('retrato')) return transformarOriginal(pointer, pageX, pageY, wasMove);
+  const b = this.scaleManager.canvasBounds;
+  const s = this.scaleManager.displayScale.x;
+  const x = (pageY - b.top) * s;
+  const y = (b.left + b.width - pageX) * s;
+  const p0 = pointer.position, p1 = pointer.prevPosition;
+  p1.x = p0.x; p1.y = p0.y;
+  const a = pointer.smoothFactor;
+  if (!wasMove || a === 0) { p0.x = x; p0.y = y; } else { p0.x = x * a + p1.x * (1 - a); p0.y = y * a + p1.y * (1 - a); }
+};
+
+// Rotacao e barra de endereco mudam o tamanho aos poucos: reaplica algumas vezes.
+const reaplicar = () => { aplicarOrientacao(); [150, 500, 1200].forEach((ms) => setTimeout(aplicarOrientacao, ms)); };
+window.addEventListener('load', reaplicar);
+window.addEventListener('resize', reaplicar);
+window.addEventListener('orientationchange', reaplicar);
+document.addEventListener('fullscreenchange', reaplicar);
+aplicarOrientacao();
 
 // Atalho de desenvolvimento: no console, pule para qualquer cena com
 //   ir('Fase5Trabalho')
