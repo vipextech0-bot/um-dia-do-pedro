@@ -1,7 +1,14 @@
 # Um Dia do Pedro — como rodar
 
 Versão publicada (GitHub Pages): https://vipextech0-bot.github.io/um-dia-do-pedro/
-Cada `git push` na branch `main` atualiza o site em 1–2 minutos.
+Cada `git push` na `main` dispara o workflow em
+[.github/workflows/pages.yml](.github/workflows/pages.yml), que empacota o
+jogo em `dist/jogo.js` e publica com o hash do commit na URL do script — o
+navegador do celular nunca fica com a versão antiga em cache. Em localhost o
+`index.html` usa os módulos de `src/` direto, sem build.
+
+Diagnóstico no aparelho: abra o link com `?debug` no fim para ver um painel
+com tamanhos, orientação, último toque e estado do áudio.
 
 O jogo usa módulos ES, então precisa de um servidor local (abrir o
 `index.html` direto pelo Finder não funciona).
